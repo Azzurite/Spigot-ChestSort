@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import de.jeffclan.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,9 +21,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import de.jeffclan.utils.Utils;
+import static java.util.stream.Collectors.*;
 
 public class JeffChestSortPlugin extends JavaPlugin {
+
+	final File ignoredChestsFile = Paths.get(getDataFolder().getAbsolutePath() + File.separator + "ignored_chests.yaml").toFile();
+	Set<IgnoredChest> ignoredChests;
 
 	Map<String, JeffChestSortPlayerSetting> PerPlayerSettings = new HashMap<String, JeffChestSortPlayerSetting>();
 	JeffChestSortMessages messages;
@@ -122,7 +130,7 @@ public class JeffChestSortPlugin extends JavaPlugin {
 		sortingMethod = getConfig().getString("sorting-method");
 		getServer().getPluginManager().registerEvents(listener, this);
 		JeffChestSortCommandExecutor commandExecutor = new JeffChestSortCommandExecutor(this);
-		this.getCommand("chestsort").setExecutor(commandExecutor);
+			this.getCommand("chestsort").setExecutor(commandExecutor);
 
 		if (verbose) {
 			getLogger().info("Current sorting method: " + sortingMethod);
@@ -158,6 +166,31 @@ public class JeffChestSortPlugin extends JavaPlugin {
 		metrics.addCustomChart(
 				new Metrics.SimplePie("using_matching_config_version", () -> Boolean.toString(usingMatchingConfig)));
 
+		loadIgnoredChests();
+	}
+
+	private void loadIgnoredChests() {
+		if (!ignoredChestsFile.exists()) {
+			ignoredChests = new HashSet<>();
+		} else {
+			YamlConfiguration config = YamlConfiguration.loadConfiguration(ignoredChestsFile);
+			List<Map<?, ?>> cfgChests = config.getMapList("ignoredChests");
+			ignoredChests = cfgChests.stream().map(IgnoredChest::fromConfig).collect(toSet());
+		}
+	}
+
+	boolean saveIgnoredChests() {
+		List<Map<?, ?>> toSave = ignoredChests.stream().map(IgnoredChest::toConfig).collect(toList());
+
+		YamlConfiguration yaml = new YamlConfiguration();
+		yaml.set("ignoredChests", toSave);
+		try {
+			yaml.save(ignoredChestsFile);
+			return true;
+		} catch (IOException e) {
+			getLogger().severe("Error while saving ignored chests: " + e.getClass().getSimpleName() + " " +  e.getMessage());
+			return false;
+		}
 	}
 
 	private void saveDefaultCategories() {

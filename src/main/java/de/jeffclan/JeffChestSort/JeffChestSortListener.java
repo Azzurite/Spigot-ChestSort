@@ -1,12 +1,10 @@
 package de.jeffclan.JeffChestSort;
 
-import java.util.UUID;
 import java.io.File;
+import java.util.UUID;
 
+import de.jeffclan.utils.Utils;
 import org.bukkit.GameMode;
-import org.bukkit.block.Chest;
-import org.bukkit.block.DoubleChest;
-import org.bukkit.block.ShulkerBox;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,12 +31,12 @@ public class JeffChestSortListener implements Listener {
 		if (event.getPlayer().isOp()) {
 			plugin.updateChecker.sendUpdateMessage(event.getPlayer());
 		}
-		
+
 		registerPlayerIfNeeded(event.getPlayer());
 
-		
+
 	}
-	
+
 	void registerPlayerIfNeeded(Player p) {
 		UUID uniqueId = p.getUniqueId();
 		if (!plugin.PerPlayerSettings.containsKey(uniqueId.toString())) {
@@ -81,7 +79,7 @@ public class JeffChestSortListener implements Listener {
 		if (!p.hasPermission("chestsort.use")) {
 			return;
 		}
-		
+
 		if(plugin.disabledWorlds.contains(p.getWorld().getName().toLowerCase())) {
 			return;
 		}
@@ -93,12 +91,15 @@ public class JeffChestSortListener implements Listener {
 
 		// Fixes exception when using /reload
 		registerPlayerIfNeeded(p);
-		
+
 		JeffChestSortPlayerSetting setting = plugin.PerPlayerSettings.get(p.getUniqueId().toString());
 
-		if (!(event.getInventory().getHolder() instanceof Chest)
-				&& !(event.getInventory().getHolder() instanceof DoubleChest)
-				&& !(event.getInventory().getHolder() instanceof ShulkerBox)) {
+		if (!Utils.isChest(event.getInventory().getHolder())) {
+			return;
+		}
+
+
+		if (plugin.ignoredChests.contains(new IgnoredChest(event))) {
 			return;
 		}
 

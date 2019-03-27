@@ -12,7 +12,7 @@ loadbefore:
 commands:
   chestsort:
     description: Toggle automatic chest sorting
-    usage: /<command>
+    usage: /<command> <params>
     aliases: sort
     permission: chestsort.use
 permissions:

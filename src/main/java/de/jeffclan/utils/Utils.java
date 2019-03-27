@@ -5,6 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.block.ShulkerBox;
+
 public class Utils {
 	public static byte[] getBytes(InputStream is) throws IOException {
 
@@ -25,6 +29,11 @@ public class Utils {
 	    }
 	    return buf;
 	  }
-	
-	
+
+
+	  public static boolean isChest(Object obj) {
+		 return (obj instanceof Chest)
+				  || (obj instanceof DoubleChest)
+				  || (obj instanceof ShulkerBox);
+	  }
 }
