@@ -2,28 +2,28 @@
 /*
 
 	ChestSort - maintained by mfnalex / JEFF Media GbR ( www.jeff-media.de )
-	
+
 	THANK YOU for your interest in ChestSort :)
-	
+
 	ChestSort has been an open-source project from the day it started.
 	Without the support of the community, many awesome features
 	would be missing. A big THANK YOU to everyone who contributed to
 	this project!
-	
+
 	If you have bug reports, feature requests etc. please message me at SpigotMC.org:
 	https://www.spigotmc.org/members/mfnalex.175238/
-	
+
 	Please DO NOT post bug reports or feature requests in the review section at SpigotMC.org. Thank you.
-	
+
 	=============================================================================================
-	
+
 	TECHNICAL INFORMATION:
-	
+
 	If you want to know how the sorting works, have a look at the JeffChestSortOrganizer class.
-	
+
 	If you want to contribute, please note that messages sent to player must be made configurable in the config.yml.
 	Please have a look at the JeffChestSortMessages class if you want to add a message.
-	
+
 */
 
 package de.jeff_media.ChestSort;
@@ -43,6 +43,7 @@ import java.util.UUID;
 
 import de.jeff_media.ChestSort.hooks.GenericGUIHook;
 import de.jeff_media.ChestSort.placeholders.ChestSortPlaceholders;
+import de.jeff_media.ChestSort.unsorted.UnsortedChestsLogic;
 import de.jeff_media.PluginUpdateChecker.PluginUpdateChecker;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -75,19 +76,19 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 	protected boolean debug = false;
 	boolean verbose = true;
 	final boolean hotkeyGUI = true;
-	
+
 	public boolean hookCrackShot = false;
 	public boolean hookInventoryPages = false;
 	public boolean hookMinepacks = false;
 
 	public GenericGUIHook genericHook;
-	
+
 	private static long updateCheckInterval = 4*60*60; // in seconds. We check on startup and every 4 hours
-	
+
 	String mcVersion; 	// 1.13.2 = 1_13_R2
 						// 1.14.4 = 1_14_R1
 						// 1.8.0  = 1_8_R1
-	int mcMinorVersion; // 14 for 1.14, 13 for 1.13, ...
+	int mcMinorVersion; // 14 for 1.14, 13 for 1.13, ..
 
 	@Override
 	public ChestSortAPIHandler getAPI() {
@@ -111,7 +112,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		getLogger().warning(String.format("%s has performed a call to a deprecated ChestSort API method. This is NOT a ChestSort error.",stackTraceElements[2]));
 		api.sortInventory(inv, startSlot, endSlot);
 	}
-	
+
 	// Public API method to check if player has automatic chest sorting enabled
 	@Deprecated
 	@Override
@@ -120,7 +121,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		getLogger().warning(String.format("%s has performed a call to a deprecated ChestSort API method. This is NOT a ChestSort error.",stackTraceElements[2]));
 		return isSortingEnabled(p);
 	}
-	
+
 	boolean isSortingEnabled(Player p) {
 		if (perPlayerSettings == null) {
 			perPlayerSettings = new HashMap<>();
@@ -151,7 +152,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		// overwrite an existing config.yml
 		this.saveDefaultConfig();
 		reloadConfig();
-		
+
 		// Load disabled-worlds. If it does not exist in the config, it returns null.
 		// That's no problem
 		disabledWorlds = (ArrayList<String>) getConfig().getStringList("disabled-worlds");
@@ -208,13 +209,13 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		getConfig().addDefault("additional-hotkeys.right-click", false);
 		getConfig().addDefault("dump", false);
 		getConfig().addDefault("log", false);
-		
+
 		getConfig().addDefault("hook-crackshot", true);
 		getConfig().addDefault("hook-crackshot-prefix", "crackshot_weapon");
 		getConfig().addDefault("hook-inventorypages", true);
 		getConfig().addDefault("hook-minepacks", true);
 		getConfig().addDefault("hook-generic",true);
-		
+
 		getConfig().addDefault("verbose", true); // Prints some information in onEnable()
 	}
 
@@ -258,12 +259,12 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 
 	@Override
 	public void onEnable() {
-		
+
 		String tmpVersion = getServer().getClass().getPackage().getName();
 		mcVersion = tmpVersion.substring(tmpVersion.lastIndexOf('.') + 1);
 		tmpVersion = mcVersion.substring(mcVersion.indexOf("_")+1);
 		mcMinorVersion = Integer.parseInt(tmpVersion.substring(0,tmpVersion.indexOf("_")));
-		
+
 		load(false);
 
 		if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null){
@@ -281,13 +282,13 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		}
 		list = new StringBuilder(list.substring(0, list.length() - 2));
 		return list.toString();
-		
+
 	}
 
 	private void registerMetrics() {
 		// Metrics will need json-simple with 1.14 API.
 		Metrics bStats = new Metrics(this,3089);
-		
+
 		bStats.addCustomChart(new Metrics.SimplePie("sorting_method", () -> sortingMethod));
 		bStats.addCustomChart(new Metrics.SimplePie("config_version",
 				() -> Integer.toString(getConfig().getInt("config-version", 0))));
@@ -334,7 +335,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 				() -> Boolean.toString(getConfig().getBoolean("additional-hotkeys.right-click"))));
 		bStats.addCustomChart(new Metrics.SimplePie("use_permissions",
 				() -> Boolean.toString(getConfig().getBoolean("use-permissions"))));
-		
+
 	}
 
 	// Saves default category files, when enabled in the config
@@ -423,7 +424,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		// but not registered. So, we only continue when the player has been registered
 		if (perPlayerSettings.containsKey(uniqueId.toString())) {
 			ChestSortPlayerSetting setting = perPlayerSettings.get(p.getUniqueId().toString());
-			
+
 			File playerFile = new File(getDataFolder() + File.separator + "playerdata",
 					p.getUniqueId().toString() + ".yml");
 			YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(playerFile);
@@ -451,9 +452,9 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 			perPlayerSettings.remove(uniqueId.toString());
 		}
 	}
-	
+
 	void load(boolean reload) {
-		
+
 		if(reload) {
 			unregisterAllPlayers();
 			reloadConfig();
@@ -461,23 +462,23 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 				updateChecker.stop();
 			}
 		}
-		
+
 		createConfig();
 		debug = getConfig().getBoolean("debug");
-		
+
 		HandlerList.unregisterAll(this);
-		
+
 		if(debug) {
 			ChestSortDebugger debugger = new ChestSortDebugger(this);
 			getServer().getPluginManager().registerEvents(debugger, this);
 		}
-		
+
 		hookCrackShot = getConfig().getBoolean("hook-crackshot")
 				&& Bukkit.getPluginManager().getPlugin("CrackShot") instanceof Plugin;
 
 		hookInventoryPages = getConfig().getBoolean("hook-inventorypages")
 				&& Bukkit.getPluginManager().getPlugin("InventoryPages") instanceof Plugin;
-			
+
 		hookMinepacks = getConfig().getBoolean("hook-minepacks")
 				&& Bukkit.getPluginManager().getPlugin("Minepacks") instanceof MinepacksPlugin;
 
@@ -488,7 +489,8 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		verbose = getConfig().getBoolean("verbose");
 		lgr = new ChestSortLogger(this,getConfig().getBoolean("log"));
 		messages = new ChestSortMessages(this);
-		organizer = new ChestSortOrganizer(this);
+		UnsortedChestsLogic unsortedChestsLogic = new UnsortedChestsLogic(this);
+		organizer = new ChestSortOrganizer(this, unsortedChestsLogic);
 		settingsGUI = new ChestSortSettingsGUI(this);
 		updateChecker = new PluginUpdateChecker(this, "https://api.jeff-media.de/chestsort/chestsort-latest-version.txt", "https://chestsort.de", "https://chestsort.de/changelog", "https://chestsort.de/donate");
 		listener = new ChestSortListener(this);
@@ -498,7 +500,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		sortingMethod = getConfig().getString("sorting-method");
 		getServer().getPluginManager().registerEvents(listener, this);
 		getServer().getPluginManager().registerEvents(settingsGUI, this);
-		ChestSortChestSortCommand chestsortCommandExecutor = new ChestSortChestSortCommand(this);
+		ChestSortChestSortCommand chestsortCommandExecutor = new ChestSortChestSortCommand(this, unsortedChestsLogic);
 		ChestSortTabCompleter tabCompleter = new ChestSortTabCompleter();
 		this.getCommand("sort").setExecutor(chestsortCommandExecutor);
 		this.getCommand("sort").setTabCompleter(tabCompleter);
@@ -544,17 +546,17 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		}
 
 		registerMetrics();
-		
+
 		if(getConfig().getBoolean("dump")) {
 			dump();
 		}
-		
+
 		for(Player p : getServer().getOnlinePlayers()) {
 			permissionsHandler.addPermissions(p);
 		}
-		
+
 		// End Reload
-		
+
 	}
 
 	void unregisterAllPlayers() {
@@ -570,7 +572,7 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 			perPlayerSettings = new HashMap<>();
 		}
 	}
-	
+
 	// Dumps all Materials into a csv file with their current category
 	void dump() {
 		try {
@@ -594,15 +596,15 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 		// Players are stored by their UUID, so that name changes don't break player's
 		// settings
 		UUID uniqueId = p.getUniqueId();
-	
+
 		// Add player to map only if they aren't registered already
 		if (!perPlayerSettings.containsKey(uniqueId.toString())) {
-	
+
 			// Player settings are stored in a file named after the player's UUID
 			File playerFile = new File(getDataFolder() + File.separator + "playerdata",
 					p.getUniqueId().toString() + ".yml");
 			YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(playerFile);
-			
+
 			playerConfig.addDefault("invSortingEnabled", getConfig().getBoolean("inv-sorting-enabled-by-default"));
 			playerConfig.addDefault("middleClick", getConfig().getBoolean("sorting-hotkeys.middle-click"));
 			playerConfig.addDefault("shiftClick", getConfig().getBoolean("sorting-hotkeys.shift-click"));
@@ -610,12 +612,12 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 			playerConfig.addDefault("shiftRightClick", getConfig().getBoolean("sorting-hotkeys.shift-right-click"));
 			playerConfig.addDefault("leftClick", getConfig().getBoolean("additional-hotkeys.left-click"));
 			playerConfig.addDefault("rightClick", getConfig().getBoolean("additional-hotkeys.right-click"));
-	
+
 			boolean activeForThisPlayer;
 			boolean invActiveForThisPlayer;
 			boolean middleClick, shiftClick, doubleClick, shiftRightClick, leftClick, rightClick;
 			boolean changed = false;
-	
+
 			if (!playerFile.exists()) {
 				// If the player settings file does not exist for this player, set it to the
 				// default value
@@ -627,11 +629,11 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 				shiftRightClick = getConfig().getBoolean("sorting-hotkeys.shift-right-click");
 				leftClick = getConfig().getBoolean("additional-hotkeys.left-click");
 				rightClick = getConfig().getBoolean("additional-hotkeys.right-click");
-				
+
 				if(debug) {
 					getLogger().info("Player "+p.getName()+" does not have player settings yet, using default values.");
 				}
-				
+
 				// Because this is new a file, we have to save it on shutdown/disconnect
 				changed=true;
 			} else {
@@ -645,18 +647,18 @@ public class ChestSortPlugin extends JavaPlugin implements de.jeff_media.ChestSo
 				leftClick = playerConfig.getBoolean("leftClick",getConfig().getBoolean("additional-hotkeys.left-click"));
 				rightClick = playerConfig.getBoolean("rightClick",getConfig().getBoolean("additional-hotkeys.right-click"));
 			}
-	
+
 			ChestSortPlayerSetting newSettings = new ChestSortPlayerSetting(activeForThisPlayer,invActiveForThisPlayer,middleClick,shiftClick,doubleClick,shiftRightClick,leftClick,rightClick,changed);
-	
+
 			// when "show-message-again-after-logout" is enabled, we don't care if the
 			// player already saw the message
 			if (!getConfig().getBoolean("show-message-again-after-logout")) {
 				newSettings.hasSeenMessage = playerConfig.getBoolean("hasSeenMessage");
 			}
-	
+
 			// Finally add the PlayerSetting object to the map
 			perPlayerSettings.put(uniqueId.toString(), newSettings);
-	
+
 		}
 	}
 

@@ -1,19 +1,23 @@
 package de.jeff_media.ChestSort;
 
+import java.util.Arrays;
+
+import de.jeff_media.ChestSort.unsorted.UnsortedChestsLogic;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
 public class ChestSortChestSortCommand implements CommandExecutor {
 
 	final ChestSortPlugin plugin;
+	private final UnsortedChestsLogic unsortedChestsLogic;
 
-	ChestSortChestSortCommand(ChestSortPlugin plugin) {
+	ChestSortChestSortCommand(ChestSortPlugin plugin, UnsortedChestsLogic unsortedChestsLogic) {
 		this.plugin = plugin;
+		this.unsortedChestsLogic = unsortedChestsLogic;
 	}
 
 	@Override
@@ -96,7 +100,8 @@ public class ChestSortChestSortCommand implements CommandExecutor {
 			if(args.length>0
 					 && !args[0].equalsIgnoreCase("toggle")
 					 && !args[0].equalsIgnoreCase("on")
-					 && !args[0].equalsIgnoreCase("off")) {
+					 && !args[0].equalsIgnoreCase("off")
+					 && !args[0].equalsIgnoreCase("chest")) {
 				p.sendMessage(String.format(plugin.messages.MSG_INVALIDOPTIONS,"\""+args[0]+"\"","\"toggle\", \"on\", \"off\", \"hotkeys\""));
 				return true;
 			}
@@ -108,6 +113,9 @@ public class ChestSortChestSortCommand implements CommandExecutor {
 			}
 			else if(args[0].equalsIgnoreCase("off")) {
 				setting.disableChestSorting();
+			}
+			else if(args[0].equalsIgnoreCase("chest")) {
+				unsortedChestsLogic.changeChestPreferences(p, Arrays.asList(args).subList(1, args.length));
 			}
 			setting.hasSeenMessage=true;
 

@@ -1,7 +1,18 @@
 package de.jeff_media.ChestSort;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
 import de.jeff_media.ChestSort.hooks.CrackShotHook;
 import de.jeff_media.ChestSort.hooks.InventoryPagesHook;
+import de.jeff_media.ChestSort.unsorted.UnsortedChestsLogic;
 import de.jeff_media.ChestSort.utils.CategoryLinePair;
 import de.jeff_media.ChestSort.utils.TypeMatchPositionPair;
 import de.jeff_media.ChestSort.utils.Utils;
@@ -20,10 +31,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
 
 public class ChestSortOrganizer {
 
@@ -50,14 +57,16 @@ public class ChestSortOrganizer {
     private static final int playerInvEndSlot = 35; // Inclusive
     private static final String emptyPlaceholderString = "~";
     final ChestSortPlugin plugin;
+    private final UnsortedChestsLogic unsortedChestsLogic;
     final CrackShotHook crackShotHook;
     final InventoryPagesHook inventoryPagesHook;
     // We store a list of all Category objects
     final ArrayList<ChestSortCategory> categories = new ArrayList<>();
     final ArrayList<String> stickyCategoryNames = new ArrayList<>();
 
-    ChestSortOrganizer(ChestSortPlugin plugin) {
+    ChestSortOrganizer(ChestSortPlugin plugin, UnsortedChestsLogic unsortedChestsLogic) {
         this.plugin = plugin;
+        this.unsortedChestsLogic = unsortedChestsLogic;
 
         // Load Categories
         File categoriesFolder = new File(
@@ -458,6 +467,7 @@ public class ChestSortOrganizer {
     // Sort an inventory only between startSlot and endSlot
     void sortInventory(@NotNull Inventory inv, int startSlot, int endSlot) {
         if(inv==null) return;
+        if (unsortedChestsLogic.isUnsortedChest(inv)) return;
         Class<? extends Inventory> invClass = inv.getClass();
         de.jeff_media.ChestSortAPI.ChestSortEvent chestSortEvent = new de.jeff_media.ChestSortAPI.ChestSortEvent(inv);
         try {

@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import de.jeff_media.ChestSort.ChestSortPlugin;
+import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -18,7 +21,7 @@ public class Utils {
 		}
 		return inv.getStorageContents();
 	}
-	
+
 	// We need this to write the category files inside the .jar to the disk
 	// Maybe there is a smarter way, i don't know.
 	public static byte[] getBytes(InputStream is) throws IOException {
@@ -40,14 +43,20 @@ public class Utils {
 	    }
 	    return buf;
 	  }
-	
+
 	public static String shortToStringWithLeadingZeroes(short number) {
 		return String.format("%05d", number);
 	}
-	
+
 	public static void renameFileInPluginDir(ChestSortPlugin plugin,String oldName, String newName) {
 		File oldFile = new File(plugin.getDataFolder().getAbsolutePath() + File.separator + oldName);
 		File newFile = new File(plugin.getDataFolder().getAbsolutePath() + File.separator + newName);
 		oldFile.getAbsoluteFile().renameTo(newFile.getAbsoluteFile());
+	}
+
+	public static boolean isChest(Object obj) {
+		return (obj instanceof Chest)
+				|| (obj instanceof DoubleChest)
+				|| (obj instanceof ShulkerBox);
 	}
 }
